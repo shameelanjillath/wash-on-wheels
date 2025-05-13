@@ -48,7 +48,7 @@ import {
   CarFront, 
   CalendarIcon, 
   Settings, 
-  Map, 
+  Map as MapIcon, 
   Home,
   User,
   Clock,
@@ -56,6 +56,9 @@ import {
   CheckCircle2,
   AlertCircle
 } from "lucide-react";
+
+// Import our custom Map component
+import Map from "@/components/ui/Map";
 
 // Mock data
 const upcomingBookings = [
@@ -161,7 +164,7 @@ export default function VendorDashboard() {
                       </SidebarMenuItem>
                       <SidebarMenuItem>
                         <SidebarMenuButton className="flex items-center gap-2 w-full px-3 py-2 hover:bg-muted rounded-md">
-                          <Map className="h-5 w-5" />
+                          <MapIcon className="h-5 w-5" />
                           Location
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -277,7 +280,7 @@ export default function VendorDashboard() {
                       </CardHeader>
                       <CardContent className="p-4">
                         <div className="aspect-video bg-muted rounded-md relative overflow-hidden">
-                          {/* Fix: Use the imported Map component properly, not as a Lucide icon */}
+                          {/* Use our custom Map component, not the Lucide icon */}
                           <Map
                             center={[-74.006, 40.7128]} // NYC
                             zoom={15}

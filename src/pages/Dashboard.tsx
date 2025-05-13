@@ -3,13 +3,16 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader } from "lucide-react";
 
+// Define a proper type for the user role
+type UserRole = "admin" | "vendor" | "user";
+
 // This is a router component that redirects to the appropriate dashboard based on user role
 export default function Dashboard() {
   const navigate = useNavigate();
   
   // Mock authentication check - in a real app, this would use Supabase auth
   const isLoggedIn = true; // Simulate logged in state for demo
-  const userRole = "user"; // One of: "admin", "vendor", "user"
+  const userRole: UserRole = "user"; // One of: "admin", "vendor", "user"
 
   useEffect(() => {
     // If not logged in, redirect to login
@@ -20,7 +23,6 @@ export default function Dashboard() {
     
     // Short timeout to simulate checking user role
     const timer = setTimeout(() => {
-      // Fix the type comparison by using a more specific type for userRole
       switch (userRole) {
         case "admin":
           navigate("/admin");
