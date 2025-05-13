@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import db from '@/utils/db/postgresql';
+import db from '@/utils/db/supaDatabaseClient';
 
 interface UseDatabaseOptions {
   query: string;
@@ -16,7 +16,7 @@ interface UseDatabaseResult<T> {
 }
 
 /**
- * A hook for executing PostgreSQL queries in React components
+ * A hook for executing PostgreSQL queries via Supabase in React components
  * @param options Query options
  * @returns Query results, loading state, error state and refetch function
  */
@@ -35,7 +35,7 @@ export function useDatabase<T = any>({
     
     try {
       const result = await db.query(query, params);
-      setData(result.rows);
+      setData(result.rows as T[]);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
       console.error('Error executing query in useDatabase:', err);

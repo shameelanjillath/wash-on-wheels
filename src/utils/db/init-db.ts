@@ -1,5 +1,5 @@
 
-import db from './postgresql';
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Initialize database tables and schema
@@ -9,81 +9,86 @@ export async function initializeDatabase() {
     console.log("Checking database structure...");
     
     // Check if tables exist by querying for a table that should be there
-    const tableCheckQuery = `
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'user_profiles'
-      );
-    `;
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .limit(1);
     
-    const result = await db.query(tableCheckQuery);
-    const tablesExist = result.rows[0]?.exists;
-    
-    if (!tablesExist) {
+    if (error && error.code === '42P01') { // 42P01 is the error code for "relation does not exist"
       console.log("Creating database tables...");
       
       // Create users profile table
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS public.user_profiles (
-          id UUID PRIMARY KEY,
-          email TEXT UNIQUE NOT NULL,
-          first_name TEXT,
-          last_name TEXT,
-          role TEXT NOT NULL DEFAULT 'user',
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `);
+      await supabase.rpc('run_sql', {
+        sql: `
+          CREATE TABLE IF NOT EXISTS public.user_profiles (
+            id UUID PRIMARY KEY,
+            email TEXT UNIQUE NOT NULL,
+            first_name TEXT,
+            last_name TEXT,
+            role TEXT NOT NULL DEFAULT 'user',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );
+        `
+      });
       
       // Create bookings table
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS public.bookings (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id UUID NOT NULL REFERENCES public.user_profiles(id),
-          vendor_id UUID NOT NULL REFERENCES public.user_profiles(id),
-          service_id UUID NOT NULL,
-          booking_date TIMESTAMP WITH TIME ZONE NOT NULL,
-          status TEXT NOT NULL DEFAULT 'pending',
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `);
+      await supabase.rpc('run_sql', {
+        sql: `
+          CREATE TABLE IF NOT EXISTS public.bookings (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id UUID NOT NULL REFERENCES public.user_profiles(id),
+            vendor_id UUID NOT NULL REFERENCES public.user_profiles(id),
+            service_id UUID NOT NULL,
+            booking_date TIMESTAMP WITH TIME ZONE NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );
+        `
+      });
       
       // Create services table
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS public.services (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          vendor_id UUID NOT NULL REFERENCES public.user_profiles(id),
-          name TEXT NOT NULL,
-          description TEXT,
-          price DECIMAL(10,2) NOT NULL,
-          duration INTEGER NOT NULL,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `);
+      await supabase.rpc('run_sql', {
+        sql: `
+          CREATE TABLE IF NOT EXISTS public.services (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            vendor_id UUID NOT NULL REFERENCES public.user_profiles(id),
+            name TEXT NOT NULL,
+            description TEXT,
+            price DECIMAL(10,2) NOT NULL,
+            duration INTEGER NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );
+        `
+      });
       
       // Create vendor locations table
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS public.vendor_locations (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          vendor_id UUID NOT NULL REFERENCES public.user_profiles(id),
-          address TEXT NOT NULL,
-          city TEXT NOT NULL,
-          state TEXT NOT NULL,
-          zip TEXT NOT NULL,
-          lat DECIMAL(9,6),
-          lng DECIMAL(9,6),
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `);
+      await supabase.rpc('run_sql', {
+        sql: `
+          CREATE TABLE IF NOT EXISTS public.vendor_locations (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            vendor_id UUID NOT NULL REFERENCES public.user_profiles(id),
+            address TEXT NOT NULL,
+            city TEXT NOT NULL,
+            state TEXT NOT NULL,
+            zip TEXT NOT NULL,
+            lat DECIMAL(9,6),
+            lng DECIMAL(9,6),
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );
+        `
+      });
       
       console.log("Database tables created successfully");
       
       // Insert some sample data (can be removed in production)
       await insertSampleData();
+    } else if (error) {
+      console.error("Error checking database structure:", error);
+      return false;
     } else {
       console.log("Database tables already exist");
     }
@@ -110,11 +115,11 @@ async function insertSampleData() {
     ];
     
     for (const user of userProfiles) {
-      await db.query(`
-        INSERT INTO public.user_profiles (id, email, first_name, last_name, role)
-        VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (email) DO NOTHING
-      `, [user.id, user.email, user.first_name, user.last_name, user.role]);
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert(user, { onConflict: 'email' });
+      
+      if (error) console.error("Error inserting user profile:", error);
     }
     
     // Insert sample services for the vendor
@@ -125,26 +130,27 @@ async function insertSampleData() {
     ];
     
     for (const service of services) {
-      await db.query(`
-        INSERT INTO public.services (vendor_id, name, description, price, duration)
-        VALUES ($1, $2, $3, $4, $5)
-      `, [service.vendor_id, service.name, service.description, service.price, service.duration]);
+      const { error } = await supabase
+        .from('services')
+        .insert(service);
+      
+      if (error) console.error("Error inserting service:", error);
     }
     
     // Insert vendor location
-    await db.query(`
-      INSERT INTO public.vendor_locations (vendor_id, address, city, state, zip, lat, lng)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      ON CONFLICT (id) DO NOTHING
-    `, [
-      '550e8400-e29b-41d4-a716-446655440000',
-      '123 Main St',
-      'Anytown',
-      'CA',
-      '12345',
-      37.7749, 
-      -122.4194
-    ]);
+    const { error } = await supabase
+      .from('vendor_locations')
+      .insert({
+        vendor_id: '550e8400-e29b-41d4-a716-446655440000',
+        address: '123 Main St',
+        city: 'Anytown',
+        state: 'CA',
+        zip: '12345',
+        lat: 37.7749,
+        lng: -122.4194
+      });
+    
+    if (error) console.error("Error inserting vendor location:", error);
     
     console.log("Sample data inserted successfully");
   } catch (error) {
