@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,18 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+        // Car Wash Theme Colors
+        carwash: {
+          primary: '#0EA5E9', // bright blue
+          secondary: '#0891B2', // teal blue
+          accent: '#38BDF8', // light blue
+          dark: '#0F172A', // dark blue/slate
+          light: '#F0F9FF', // light blue/white
+          success: '#22C55E', // green
+          warning: '#F59E0B', // amber
+          error: '#EF4444', // red
+        },
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,12 +96,31 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' }
+        },
+        'fade-in-up': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' }
+        },
+        'pulse-slow': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.8' }
+        }
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
-			}
+				'accordion-up': 'accordion-up 0.2s ease-out',
+        'fade-in': 'fade-in 0.5s ease-out',
+        'fade-in-up': 'fade-in-up 0.5s ease-out',
+        'pulse-slow': 'pulse-slow 3s ease-in-out infinite'
+			},
+      fontFamily: {
+        sans: ['Inter var', 'sans-serif'],
+        display: ['Montserrat', 'sans-serif']
+      }
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
