@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   SidebarProvider, 
@@ -278,21 +277,19 @@ export default function VendorDashboard() {
                       </CardHeader>
                       <CardContent className="p-4">
                         <div className="aspect-video bg-muted rounded-md relative overflow-hidden">
-                          {/* This would be a Map component in a real app */}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Map
-                              center={[-74.006, 40.7128]} // NYC
-                              zoom={15}
-                              markers={[
-                                {
-                                  lat: 40.7128,
-                                  lng: -74.006,
-                                  title: "Express Auto Spa"
-                                }
-                              ]}
-                              className="h-full"
-                            />
-                          </div>
+                          {/* Fix: Use the imported Map component properly, not as a Lucide icon */}
+                          <Map
+                            center={[-74.006, 40.7128]} // NYC
+                            zoom={15}
+                            markers={[
+                              {
+                                lat: 40.7128,
+                                lng: -74.006,
+                                title: "Express Auto Spa"
+                              }
+                            ]}
+                            className="h-full"
+                          />
                         </div>
                         <div className="mt-4 text-sm">
                           <p className="font-medium">Express Auto Spa</p>

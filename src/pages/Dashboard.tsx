@@ -20,6 +20,7 @@ export default function Dashboard() {
     
     // Short timeout to simulate checking user role
     const timer = setTimeout(() => {
+      // Fix the type comparison by using a more specific type for userRole
       switch (userRole) {
         case "admin":
           navigate("/admin");
