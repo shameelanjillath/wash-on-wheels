@@ -1,51 +1,61 @@
 
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Loader } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
+import NavBar from "@/components/layout/NavBar";
+import Footer from "@/components/layout/Footer";
 
-// Define a proper type for the user role
+// Define a type for the role
 type UserRole = "admin" | "vendor" | "user";
 
-// This is a router component that redirects to the appropriate dashboard based on user role
-export default function Dashboard() {
-  const navigate = useNavigate();
-  
-  // Mock authentication check - in a real app, this would use Supabase auth
-  const isLoggedIn = true; // Simulate logged in state for demo
-  const userRole: UserRole = "user"; // One of: "admin", "vendor", "user"
+const Dashboard = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [userRole, setUserRole] = useState<UserRole>("user");
 
   useEffect(() => {
-    // If not logged in, redirect to login
-    if (!isLoggedIn) {
-      navigate("/login");
-      return;
-    }
-    
-    // Short timeout to simulate checking user role
-    const timer = setTimeout(() => {
-      switch (userRole) {
-        case "admin":
-          navigate("/admin");
-          break;
-        case "vendor":
-          navigate("/vendor");
-          break;
-        case "user":
-          navigate("/user");
-          break;
-        default:
-          // If role is not recognized, default to user dashboard
-          navigate("/user");
+    // In a real app, you'd check authentication and get user role
+    // For demo purposes, let's assume the user is authenticated
+    // and has a specific role (admin, vendor, or user)
+    const checkAuth = async () => {
+      try {
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        // Mock authentication result
+        setIsAuthenticated(true);
+        // Set user role (could be from API or local storage)
+        setUserRole("vendor"); // Change this to simulate different roles
+      } catch (error) {
+        console.error("Authentication error:", error);
+        setIsAuthenticated(false);
       }
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, [navigate, isLoggedIn, userRole]);
+    };
+
+    checkAuth();
+  }, []);
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  if (userRole === "admin") {
+    return <Navigate to="/admin" />;
+  }
+
+  if (userRole === "vendor") {
+    return <Navigate to="/vendor" />;
+  }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
-      <Loader className="h-8 w-8 animate-spin text-carwash-primary" />
-      <p className="mt-4 text-gray-600">Redirecting to your dashboard...</p>
+    <div className="flex flex-col min-h-screen">
+      <NavBar />
+      <div className="flex-1 container mx-auto p-4 md:p-6">
+        <h1 className="text-3xl font-bold mb-6">User Dashboard</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Dashboard content goes here */}
+        </div>
+      </div>
+      <Footer />
     </div>
   );
-}
+};
+
+export default Dashboard;
